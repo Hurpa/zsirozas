@@ -1,0 +1,152 @@
+class_name UiTheme
+extends RefCounted
+## Központi, egységes vizuális stílus a teljes alkalmazáshoz: sötét,
+## elegáns "casino/felt" hangulat, arany akcentusokkal, lekerekített,
+## lágy árnyékos panelekkel/gombokkal.
+##
+## Használat: a képernyők GYÖKÉR Control-jára kell rátenni
+## (root.theme = UiTheme.get_theme()) - onnantól MINDEN leszármazott
+## Button/Label/Panel automatikusan örökli a stílust, nincs szükség
+## egyedi, gombonkénti stílusozó kódra.
+
+# --- Színpaletta ---
+const COLOR_FELT_LIGHT := Color(0.075, 0.20, 0.118)
+const COLOR_FELT_DARK := Color(0.024, 0.075, 0.047)
+const COLOR_PANEL := Color(0.075, 0.09, 0.08, 0.93)
+const COLOR_PANEL_BORDER := Color(0.83, 0.68, 0.32, 0.35)
+const COLOR_GOLD := Color(0.85, 0.69, 0.31)
+const COLOR_TEXT := Color(0.97, 0.96, 0.92)
+const COLOR_TEXT_MUTED := Color(0.80, 0.82, 0.78, 0.85)
+const COLOR_SECONDARY_BG := Color(0.15, 0.18, 0.16, 0.9)
+const COLOR_SECONDARY_BORDER := Color(0.97, 0.96, 0.92, 0.25)
+
+static var _cached_theme: Theme = null
+
+static func get_theme() -> Theme:
+	if _cached_theme == null:
+		_cached_theme = _build_theme()
+	return _cached_theme
+
+static func _build_theme() -> Theme:
+	var theme := Theme.new()
+	var base_font_size := UiScale.font_size(18)
+	theme.default_font_size = base_font_size
+
+	theme.set_color("font_color", "Label", COLOR_TEXT)
+	theme.set_font_size("font_size", "Label", base_font_size)
+
+	var panel_style := _rounded_style(COLOR_PANEL, 18, COLOR_PANEL_BORDER, 1)
+	panel_style.content_margin_left = 22
+	panel_style.content_margin_right = 22
+	panel_style.content_margin_top = 16
+	panel_style.content_margin_bottom = 16
+	panel_style.shadow_size = 12
+	panel_style.shadow_color = Color(0, 0, 0, 0.35)
+	panel_style.shadow_offset = Vector2(0, 5)
+	theme.set_stylebox("panel", "PanelContainer", panel_style)
+	theme.set_stylebox("panel", "Panel", panel_style)
+
+	# Alap (= másodlagos jellegű) gombstílus - ezt kapja minden Button,
+	# ami nincs külön "PrimaryButton" típusra állítva.
+	_setup_button_variation(theme, "Button", COLOR_SECONDARY_BG, COLOR_SECONDARY_BORDER, COLOR_TEXT)
+
+	theme.set_type_variation("PrimaryButton", "Button")
+	_setup_button_variation(theme, "PrimaryButton", COLOR_GOLD, COLOR_GOLD, Color(0.12, 0.09, 0.02))
+
+	theme.set_type_variation("SecondaryButton", "Button")
+	_setup_button_variation(theme, "SecondaryButton", COLOR_SECONDARY_BG, COLOR_SECONDARY_BORDER, COLOR_TEXT)
+
+	return theme
+
+static func _setup_button_variation(theme: Theme, type_name: String, bg: Color, border: Color, font_color: Color) -> void:
+	var normal := _rounded_style(bg, 16, border, 1)
+	normal.content_margin_left = 26
+	normal.content_margin_right = 26
+	normal.content_margin_top = 16
+	normal.content_margin_bottom = 16
+	normal.shadow_size = 6
+	normal.shadow_color = Color(0, 0, 0, 0.3)
+	normal.shadow_offset = Vector2(0, 3)
+
+	var hover: StyleBoxFlat = normal.duplicate() as StyleBoxFlat
+	hover.bg_color = bg.lightened(0.12)
+
+	var pressed: StyleBoxFlat = normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = bg.darkened(0.12)
+	pressed.shadow_size = 2
+	pressed.shadow_offset = Vector2(0, 1)
+
+	var focus: StyleBoxFlat = normal.duplicate() as StyleBoxFlat
+	focus.border_color = COLOR_GOLD
+	focus.set_border_width_all(2)
+
+	var disabled: StyleBoxFlat = normal.duplicate() as StyleBoxFlat
+	disabled.bg_color = bg.darkened(0.35)
+	disabled.border_color = border.darkened(0.35)
+
+	theme.set_stylebox("normal", type_name, normal)
+	theme.set_stylebox("hover", type_name, hover)
+	theme.set_stylebox("pressed", type_name, pressed)
+	theme.set_stylebox("focus", type_name, focus)
+	theme.set_stylebox("disabled", type_name, disabled)
+	theme.set_color("font_color", type_name, font_color)
+	theme.set_color("font_hover_color", type_name, font_color)
+	theme.set_color("font_pressed_color", type_name, font_color)
+	theme.set_color("font_focus_color", type_name, font_color)
+	theme.set_font_size("font_size", type_name, UiScale.font_size(18))
+
+static func _rounded_style(bg: Color, radius: int, border_color: Color, border_width: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg
+	style.set_corner_radius_all(radius)
+	style.set_border_width_all(border_width)
+	style.border_color = border_color
+	return style
+
+## Kiemelt ("call to action") gombstílus rátétele - arany, jól látható.
+static func mark_primary(button: Button) -> void:
+	button.theme_type_variation = "PrimaryButton"
+
+## Visszafogottabb, másodlagos gombstílus (ez amúgy is az alapértelmezett,
+## de explicit hívással egyértelműbb az olvasónak/kódnak).
+static func mark_secondary(button: Button) -> void:
+	button.theme_type_variation = "SecondaryButton"
+
+## Finom "megnyomás" visszajelzés (enyhe összehúzódás) egy gombra - ettől
+## érzi kézzelfoghatóbbnak/modernebbnek a felhasználó a felületet.
+static func add_press_feedback(button: Button) -> void:
+	var sync_pivot := func():
+		button.pivot_offset = button.size / 2.0
+	sync_pivot.call()
+	button.resized.connect(sync_pivot)
+	button.button_down.connect(func():
+		var tw := button.create_tween()
+		tw.tween_property(button, "scale", Vector2(0.94, 0.94), 0.06)
+	)
+	button.button_up.connect(func():
+		var tw := button.create_tween()
+		tw.tween_property(button, "scale", Vector2.ONE, 0.12)
+	)
+
+## Lágy, sugárirányú ("spotlight") háttér-gradiens a lapos egyszínű
+## háttér helyett - mélységérzetet ad, letisztult, modern hatás.
+static func build_background() -> TextureRect:
+	var gradient := Gradient.new()
+	gradient.set_color(0, COLOR_FELT_LIGHT)
+	gradient.set_color(1, COLOR_FELT_DARK)
+
+	var tex := GradientTexture2D.new()
+	tex.gradient = gradient
+	tex.width = 512
+	tex.height = 512
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.4)
+	tex.fill_to = Vector2(0.5, 1.05)
+
+	var rect := TextureRect.new()
+	rect.texture = tex
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	return rect
