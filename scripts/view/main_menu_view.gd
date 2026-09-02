@@ -25,16 +25,16 @@ func _ready() -> void:
 	title.text = "Zsírozás"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", UiTheme.COLOR_GOLD)
-	title.add_theme_font_size_override("font_size", UiScale.font_size(56))
+	title.add_theme_font_size_override("font_size", UiScale.font_size(86))
 	title.add_theme_constant_override("outline_size", 2)
 	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.4))
 	vbox.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "2 játékos - pass & play"
+	subtitle.text = "2 játékos - Add tovább és játssz"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.add_theme_color_override("font_color", UiTheme.COLOR_TEXT_MUTED)
-	subtitle.add_theme_font_size_override("font_size", UiScale.font_size(16))
+	subtitle.add_theme_font_size_override("font_size", UiScale.font_size(26))
 	vbox.add_child(subtitle)
 
 	var spacer := Control.new()
@@ -42,7 +42,7 @@ func _ready() -> void:
 	vbox.add_child(spacer)
 
 	var start_btn := Button.new()
-	start_btn.text = "Új játék"
+	start_btn.text = "Új Játék"
 	start_btn.custom_minimum_size = UiScale.button_size(Vector2(240, 54))
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	start_btn.pressed.connect(func(): SceneManager.go_to_game())

@@ -19,9 +19,9 @@ static func is_mobile() -> bool:
 static func button_size(base: Vector2) -> Vector2:
 	if not is_mobile():
 		return base
-	var scaled := base * 1.25
+	var scaled := base * 2
 	return Vector2(max(scaled.x, MOBILE_MIN_TOUCH_WIDTH), max(scaled.y, MOBILE_MIN_TOUCH_HEIGHT))
 
 ## Betűméret mobilon nagyobb az olvashatóság/vizuális súly miatt.
 static func font_size(base: int) -> int:
-	return int(round(base * 1.25)) if is_mobile() else base
+	return int(round(base * 1.5)) if is_mobile() else base
